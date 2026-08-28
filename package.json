@@ -1,0 +1,11 @@
+{
+  "name": "mywebtab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "icons": "node scripts/icons.mjs",
+    "check": "node scripts/verify.mjs",
+    "package": "node scripts/package.mjs"
+  }
+}

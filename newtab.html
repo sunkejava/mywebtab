@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <title>MyWebTab</title>
+    <link rel="stylesheet" href="src/styles.css" />
+  </head>
+  <body>
+    <div class="backdrop" id="backdrop"></div>
+    <div class="veil"></div>
+
+    <main class="shell">
+      <header class="topbar">
+        <button class="brand" id="homeButton" type="button" aria-label="返回首页">
+          <span class="brand-mark">M</span><span>MyWebTab</span>
+        </button>
+        <div class="top-actions">
+          <button class="icon-button" id="focusButton" title="专注模式" aria-label="专注模式">◐</button>
+          <button class="icon-button" id="settingsButton" title="个性化设置" aria-label="个性化设置">⚙</button>
+        </div>
+      </header>
+
+      <section class="hero">
+        <div class="clock" id="clock">00:00</div>
+        <div class="date-line" id="dateLine">正在读取日期…</div>
+        <form class="search" id="searchForm" role="search">
+          <button class="engine-button" id="engineButton" type="button" aria-haspopup="listbox">
+            <span id="engineMark">必</span><span id="engineName">必应</span><span class="chevron">⌄</span>
+          </button>
+          <input id="searchInput" type="search" autocomplete="off" placeholder="搜索网络，或输入网址" aria-label="搜索内容" />
+          <button class="search-submit" type="submit" aria-label="搜索">⌕</button>
+          <div class="engine-menu hidden" id="engineMenu" role="listbox"></div>
+        </form>
+      </section>
+
+      <section class="dashboard">
+        <div class="section-heading">
+          <nav class="tabs" id="categoryTabs" aria-label="快捷方式分类"></nav>
+          <button class="text-button" id="manageLinksButton">管理快捷方式</button>
+        </div>
+        <div class="shortcut-grid" id="shortcutGrid"></div>
+      </section>
+
+      <section class="widgets" id="widgets">
+        <article class="widget weather-widget">
+          <div>
+            <div class="eyebrow" id="weatherLocation">天气</div>
+            <div class="temperature"><span id="temperature">--</span><small>°C</small></div>
+          </div>
+          <div class="weather-detail">
+            <span class="weather-icon" id="weatherIcon">☁</span>
+            <strong id="weatherText">点击获取天气</strong>
+            <span id="weatherRange">等待定位授权</span>
+          </div>
+          <button class="widget-hit" id="weatherButton" aria-label="刷新天气"></button>
+        </article>
+
+        <article class="widget calendar-widget">
+          <div class="calendar-day"><span id="calendarMonth">八月</span><strong id="calendarDay">28</strong></div>
+          <div><div class="eyebrow">今日日程</div><strong id="calendarWeekday">星期五</strong><p id="calendarTip">愿今天有所收获</p></div>
+        </article>
+
+        <article class="widget quote-widget">
+          <div class="quote-mark">“</div>
+          <blockquote id="quoteText">保持好奇，持续创造。</blockquote>
+          <span id="quoteAuthor">MyWebTab</span>
+        </article>
+      </section>
+
+      <footer><span>按 <kbd>/</kbd> 快速搜索</span><span id="footerTip">数据仅保存在当前浏览器</span></footer>
+    </main>
+
+    <div class="modal-layer hidden" id="modalLayer">
+      <div class="modal-backdrop" data-close-modal></div>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <header><div><span class="eyebrow" id="modalEyebrow">个性化</span><h2 id="modalTitle">设置</h2></div><button class="icon-button" data-close-modal aria-label="关闭">×</button></header>
+        <div class="modal-body" id="modalBody"></div>
+      </section>
+    </div>
+
+    <div class="toast hidden" id="toast" role="status"></div>
+    <input class="hidden" id="backgroundPicker" type="file" accept="image/*" />
+    <input class="hidden" id="importPicker" type="file" accept="application/json" />
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>

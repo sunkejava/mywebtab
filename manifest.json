@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "MyWebTab 新标签页",
+  "short_name": "MyWebTab",
+  "version": "1.0.0",
+  "description": "简洁、美观、可定制的 Edge 与 Chrome 新标签页。",
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "permissions": ["storage", "unlimitedStorage", "geolocation"],
+  "host_permissions": [
+    "https://api.open-meteo.com/*"
+  ],
+  "icons": {
+    "16": "assets/icon-16.png",
+    "32": "assets/icon-32.png",
+    "48": "assets/icon-48.png",
+    "128": "assets/icon-128.png"
+  }
+}
