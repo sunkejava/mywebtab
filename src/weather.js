@@ -10,9 +10,22 @@ function position() {
   return new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 8000, maximumAge: 30 * 60 * 1000 }));
 }
 
+async function resolveLocation() {
+  try {
+    const { coords } = await position();
+    return { latitude: coords.latitude, longitude: coords.longitude, name: "当前位置", source: "gps" };
+  } catch {
+    const response = await fetch("https://ipwho.is/");
+    if (!response.ok) throw new Error("定位服务不可用");
+    const data = await response.json();
+    if (!data.success || !data.latitude) throw new Error("无法确定所在城市");
+    return { latitude: data.latitude, longitude: data.longitude, name: data.city || data.region || "当前位置", source: "ip" };
+  }
+}
+
 export async function fetchWeather() {
-  const { coords } = await position();
-  const query = `latitude=${coords.latitude}&longitude=${coords.longitude}`;
+  const location = await resolveLocation();
+  const query = `latitude=${location.latitude}&longitude=${location.longitude}`;
   const forecastResponse = await fetch(`https://api.open-meteo.com/v1/forecast?${query}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`);
   if (!forecastResponse.ok) throw new Error("天气服务暂时不可用");
   const forecast = await forecastResponse.json();
@@ -20,6 +33,6 @@ export async function fetchWeather() {
   return {
     temperature: Math.round(forecast.current.temperature_2m), text, icon,
     min: Math.round(forecast.daily.temperature_2m_min[0]), max: Math.round(forecast.daily.temperature_2m_max[0]),
-    location: forecast.timezone?.split("/").pop()?.replaceAll("_", " ") || "当前位置", updatedAt: Date.now()
+    location: location.name, source: location.source, updatedAt: Date.now()
   };
 }

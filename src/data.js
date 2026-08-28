@@ -48,4 +48,15 @@ export const THEMES = [
   { id: "ink", name: "墨夜", background: "radial-gradient(circle at 20% 10%, #465266 0, transparent 30%), linear-gradient(145deg, #0b0d12, #252c3a 60%, #11131a)" }
 ];
 
-export const DEFAULT_SETTINGS = { engine: "bing", category: "common", theme: "aurora", customBackground: "", blur: 16, shade: 42, links: DEFAULT_LINKS, weather: null };
+export const WALLPAPERS = [
+  ["mountain", "雪山晨光", "自然", "photo-1500530855697-b586d89ba3ee"],
+  ["lake", "静谧湖泊", "自然", "photo-1470770841072-f978cf4d019e"],
+  ["ocean", "蓝色海岸", "海洋", "photo-1507525428034-b723cf961d3e"],
+  ["forest", "雾中森林", "自然", "photo-1448375240586-882707db888b"],
+  ["city", "城市之夜", "城市", "photo-1519501025264-65ba15a82390"],
+  ["desk", "极简桌面", "工作", "photo-1497215728101-856f4ea42174"],
+  ["desert", "沙漠曲线", "自然", "photo-1509316785289-025f5b846b35"],
+  ["aurora", "绚丽极光", "自然", "photo-1483347756197-71ef80e95f73"]
+].map(([id,name,category,photo])=>({id,name,category,thumbnail:`https://images.unsplash.com/${photo}?auto=format&fit=crop&w=500&q=72`,url:`https://images.unsplash.com/${photo}?auto=format&fit=crop&w=2400&q=88`}));
+
+export const DEFAULT_SETTINGS = { engine: "bing", category: "common", theme: "aurora", colorMode: "dark", openMode: "new", wallpaper: "", customBackground: "", blur: 18, shade: 36, links: DEFAULT_LINKS, weather: null };
