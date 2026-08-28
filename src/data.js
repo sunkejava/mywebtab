@@ -18,7 +18,7 @@ export const SEARCH_ENGINES = [
 export const CATEGORIES = [
   { id: "common", name: "常用" }, { id: "dev", name: "开发" }, { id: "design", name: "设计" },
   { id: "ai", name: "AI" }, { id: "media", name: "影音" }, { id: "office", name: "办公" }
-  , { id: "shopping", name: "购物" }
+  , { id: "shopping", name: "购物" }, { id: "blog", name: "博客" }
 ];
 
 export const DEFAULT_LINKS = [
@@ -56,7 +56,14 @@ export const DEFAULT_LINKS = [
   ["shopping", "天猫", "https://www.tmall.com", "猫", "#ff0036"], ["shopping", "拼多多", "https://www.pinduoduo.com", "拼", "#e02e24"],
   ["shopping", "苏宁易购", "https://www.suning.com", "苏", "#ffb400"], ["shopping", "唯品会", "https://www.vip.com", "唯", "#d7217b"],
   ["shopping", "Amazon", "https://www.amazon.com", "A", "#ff9900"], ["shopping", "闲鱼", "https://www.goofish.com", "闲", "#ffe100"],
-  ["shopping", "小米商城", "https://www.mi.com/shop", "Mi", "#ff6900"], ["shopping", "什么值得买", "https://www.smzdm.com", "值", "#e62828"]
+  ["shopping", "小米商城", "https://www.mi.com/shop", "Mi", "#ff6900"], ["shopping", "什么值得买", "https://www.smzdm.com", "值", "#e62828"],
+  ["blog", "博客园", "https://www.cnblogs.com", "博", "#2b6695"], ["blog", "CSDN", "https://www.csdn.net", "C", "#fc5531"],
+  ["blog", "MSDN Archive", "https://learn.microsoft.com/en-us/archive/msdn-magazine/", "MS", "#0078d4"], ["blog", "掘金", "https://juejin.cn", "掘", "#1e80ff"],
+  ["blog", "SegmentFault", "https://segmentfault.com", "SF", "#00965e"], ["blog", "开源中国", "https://www.oschina.net/blog", "OS", "#21b351"],
+  ["blog", "51CTO博客", "https://blog.51cto.com", "51", "#e95420"], ["blog", "阮一峰博客", "https://www.ruanyifeng.com/blog/", "阮", "#111827"],
+  ["blog", "Medium", "https://medium.com", "M", "#111111"], ["blog", "DEV Community", "https://dev.to", "DEV", "#0a0a0a"],
+  ["blog", "Hashnode", "https://hashnode.com", "H", "#2962ff"], ["blog", "DZone", "https://dzone.com", "DZ", "#32a852"],
+  ["blog", "Smashing Magazine", "https://www.smashingmagazine.com", "SM", "#d33a2c"], ["blog", "CSS-Tricks", "https://css-tricks.com", "CSS", "#111111"]
 ].map(([category, name, url, icon, color], index) => ({ id: `v3-${index}`, category, name, url, icon, color }));
 
 export const THEMES = [
@@ -85,4 +92,4 @@ export const WALLPAPERS = [
   ["minimal", "极简空间", "极简", "photo-1494438639946-1ebd1d20bf85"], ["paper", "柔和纸张", "极简", "photo-1497366811353-6870744d04b2"]
 ].map(([id,name,category,photo])=>({id,name,category,thumbnail:`https://images.unsplash.com/${photo}?auto=format&fit=crop&w=500&q=72`,url:`https://images.unsplash.com/${photo}?auto=format&fit=crop&w=2400&q=88`}));
 
-export const DEFAULT_SETTINGS = { schemaVersion: 3, engine: "bing", category: "common", theme: "aurora", colorMode: "dark", openMode: "new", wallpaper: "", customBackground: "", blur: 18, shade: 36, links: DEFAULT_LINKS, weather: null };
+export const DEFAULT_SETTINGS = { schemaVersion: 4, engine: "bing", category: "common", theme: "aurora", colorMode: "dark", openMode: "new", wallpaper: "", customBackground: "", blur: 18, shade: 36, links: DEFAULT_LINKS, weather: null };
