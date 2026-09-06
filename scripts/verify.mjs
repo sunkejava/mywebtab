@@ -21,6 +21,8 @@ if (WALLPAPERS.length < 24 || new Set(WALLPAPERS.map(item => item.category)).siz
 const { WALLPAPER_SOURCES, map360Wallpapers, searchWallpapers } = await import("../src/wallpapers.js");
 if (typeof searchWallpapers !== "function" || WALLPAPER_SOURCES.filter(source => source.id.startsWith("360-")).length < 7) throw new Error("大陆壁纸源或关键词搜索未正确配置");
 if (WALLPAPER_SOURCES.some(source => /wallhaven|picsum/i.test(source.id))) throw new Error("仍包含需境外网络访问的壁纸源");
+for (const source of ["timeline", "hao-wallpaper"]) if (!WALLPAPER_SOURCES.some(item => item.id === source && typeof item.load === "function")) throw new Error(`${source} 壁纸源未正确配置`);
+for (const host of ["https://api.nguaduot.cn/*", "https://haowallpaper.com/*"]) if (!manifest.host_permissions.includes(host)) throw new Error(`${host} 权限缺失`);
 const wallpaperFixture = map360Wallpapers({ data: [{ id: 1, utag: "测试壁纸", url: "http://p0.qhimg.com/example.jpg", url_thumb: "http://p1.qhimg.com/thumb.jpg" }] });
 if (wallpaperFixture[0]?.url !== "https://p0.qhimg.com/example.jpg" || wallpaperFixture[0]?.thumbnail !== "https://p1.qhimg.com/thumb.jpg") throw new Error("360 壁纸地址 HTTPS 转换失败");
 for (const category of ["shopping", "blog", "dev", "ai"]) if (DEFAULT_LINKS.filter(link => link.category === category).length < 10) throw new Error(`${category} 默认网站不足`);
