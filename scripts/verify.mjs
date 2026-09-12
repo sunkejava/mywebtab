@@ -18,10 +18,11 @@ const panels = new Set([...toolsHtml.matchAll(/data-panel="([^"]+)"/g)].map(matc
 for (const tool of navTools) if (!panels.has(tool)) throw new Error(`工具 ${tool} 缺少对应面板`);
 const { WALLPAPERS, DEFAULT_LINKS, DEFAULT_SETTINGS } = await import("../src/data.js");
 if (WALLPAPERS.length < 24 || new Set(WALLPAPERS.map(item => item.category)).size < 6) throw new Error("壁纸数量或分类不足");
-const { WALLPAPER_SOURCES, getBirdCategories, loadBirdWallpapers, searchWallpapers } = await import("../src/wallpapers.js");
+const { WALLPAPER_SOURCES, getBirdCategories, getHaoDisplayUrl, loadBirdWallpapers, searchWallpapers } = await import("../src/wallpapers.js");
 if (![getBirdCategories, loadBirdWallpapers, searchWallpapers].every(item => typeof item === "function")) throw new Error("小鸟壁纸分类、分页或关键词搜索未正确配置");
 if (!WALLPAPER_SOURCES.some(source => source.id === "bird" && source.bird) || WALLPAPER_SOURCES.some(source => /360|wallhaven|picsum/i.test(source.id))) throw new Error("小鸟壁纸源替换不完整");
 if (!WALLPAPER_SOURCES.some(item => item.id === "hao-wallpaper" && typeof item.load === "function") || WALLPAPER_SOURCES.some(item => item.id === "timeline")) throw new Error("哲风壁纸或拾光移除状态不正确");
+if (!getHaoDisplayUrl("/link/common/file/getCroppingImg/123").includes("/previewFileImg/123")) throw new Error("哲风壁纸背景仍在使用列表缩略图");
 for (const host of ["http://wp.birdpaper.com.cn/*", "https://haowallpaper.com/*"]) if (!manifest.host_permissions.includes(host)) throw new Error(`${host} 权限缺失`);
 if (manifest.host_permissions.some(host => /timeline|nguaduot/i.test(host))) throw new Error("仍包含拾光壁纸接口权限");
 const appSource = await readFile("src/app.js", "utf8");

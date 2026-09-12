@@ -81,14 +81,21 @@ async function bingChina() {
 
 const decodeHtml = (value = "") => value.replaceAll("&quot;", '"').replaceAll("&#39;", "'").replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
 
+export function getHaoDisplayUrl(thumbnailUrl) {
+  const url = new URL(decodeHtml(thumbnailUrl), HAO_WALLPAPER);
+  url.pathname = url.pathname.replace("/getCroppingImg/", "/previewFileImg/");
+  return url.href;
+}
+
 export function parseHaoWallpaperHtml(html) {
   const items = [];
   for (const tag of String(html).match(/<img\b[^>]*>/gi) || []) {
     const src = tag.match(/\bsrc=["']([^"']+)["']/i)?.[1];
     if (!src?.includes("/link/common/file/getCroppingImg/")) continue;
     const alt = decodeHtml(tag.match(/\balt=["']([^"']*)["']/i)?.[1] || "哲风壁纸");
-    const url = new URL(decodeHtml(src), HAO_WALLPAPER).href;
-    items.push({ id: `hao-${url.split("/").pop()}`, name: alt, thumbnail: url, url, source: "哲风壁纸" });
+    const thumbnail = new URL(decodeHtml(src), HAO_WALLPAPER).href;
+    const url = getHaoDisplayUrl(thumbnail);
+    items.push({ id: `hao-${thumbnail.split("/").pop()}`, name: alt, thumbnail, url, source: "哲风壁纸" });
   }
   return items.slice(0, 24);
 }

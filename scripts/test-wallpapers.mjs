@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { buildBirdRequest, buildHaoWallpaperUrl, mapBirdCategories, mapBirdWallpapers, parseHaoWallpaperHtml, parseHaoWallpaperPage } from "../src/wallpapers.js";
+import { buildBirdRequest, buildHaoWallpaperUrl, getHaoDisplayUrl, mapBirdCategories, mapBirdWallpapers, parseHaoWallpaperHtml, parseHaoWallpaperPage } from "../src/wallpapers.js";
 
 function birdCategoriesKeepTypeAndHotTags() {
   const categories = mapBirdCategories({ data: [{ old_id: "9", category: "风景大片", show_name: "风景", hot_tag: [{ tag: "城市夜景", show_tag: "城市夜景" }] }] });
@@ -30,7 +30,8 @@ function haoHtmlKeepsOnlyWallpaperCards() {
   const html = '<img src="/favicon.ico"><img src="https://haowallpaper.com/link/common/file/getCroppingImg/123" alt="山川 &amp; 湖泊"><img src="/other.png">';
   const items = parseHaoWallpaperHtml(html);
   assert.equal(items.length, 1);
-  assert.deepEqual(items[0], { id: "hao-123", name: "山川 & 湖泊", thumbnail: "https://haowallpaper.com/link/common/file/getCroppingImg/123", url: "https://haowallpaper.com/link/common/file/getCroppingImg/123", source: "哲风壁纸" });
+  assert.deepEqual(items[0], { id: "hao-123", name: "山川 & 湖泊", thumbnail: "https://haowallpaper.com/link/common/file/getCroppingImg/123", url: "https://haowallpaper.com/link/common/file/previewFileImg/123", source: "哲风壁纸" });
+  assert.equal(getHaoDisplayUrl("/link/common/file/getCroppingImg/456"), "https://haowallpaper.com/link/common/file/previewFileImg/456");
 }
 
 function haoSearchCategoryAndPaginationAreMapped() {
