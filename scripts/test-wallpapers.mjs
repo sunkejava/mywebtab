@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { buildBirdRequest, mapBirdCategories, mapBirdWallpapers, mapTimelineWallpapers, parseHaoWallpaperHtml } from "../src/wallpapers.js";
+import { buildBirdRequest, buildHaoWallpaperUrl, mapBirdCategories, mapBirdWallpapers, mapTimelineWallpapers, parseHaoWallpaperHtml, parseHaoWallpaperPage } from "../src/wallpapers.js";
 
 function birdCategoriesKeepTypeAndHotTags() {
   const categories = mapBirdCategories({ data: [{ old_id: "9", category: "风景大片", show_name: "风景", hot_tag: [{ tag: "城市夜景", show_tag: "城市夜景" }] }] });
@@ -38,6 +38,16 @@ function haoHtmlKeepsOnlyWallpaperCards() {
   assert.deepEqual(items[0], { id: "hao-123", name: "山川 & 湖泊", thumbnail: "https://haowallpaper.com/link/common/file/getCroppingImg/123", url: "https://haowallpaper.com/link/common/file/getCroppingImg/123", source: "哲风壁纸" });
 }
 
+function haoSearchCategoryAndPaginationAreMapped() {
+  assert.equal(buildHaoWallpaperUrl({ page: 3, keyword: "动漫" }), "https://haowallpaper.com/homeView?page=3&search=%E5%8A%A8%E6%BC%AB");
+  assert.equal(buildHaoWallpaperUrl({ category: "自然风景" }), "https://haowallpaper.com/homeView?search=%E8%87%AA%E7%84%B6%E9%A3%8E%E6%99%AF");
+  const html = '<div class="page-content"><a href="/homeView?page=7">7</a><a class="isDefault">4482</a></div><img src="/link/common/file/getCroppingImg/456" alt="风景">';
+  const result = parseHaoWallpaperPage(html, 2);
+  assert.equal(result.page, 2);
+  assert.equal(result.totalPage, 4482);
+  assert.equal(result.items.length, 1);
+}
+
 birdCategoriesKeepTypeAndHotTags();
 birdWallpaperMapsPaginationTagsAndHttpsImage();
 birdCategoryRequestIncludesTypeAndPage();
@@ -45,6 +55,7 @@ birdTagSearchRequestIncludesKeywordAndPage();
 birdLatestRequestIncludesPage();
 timelinePayloadMapsOriginalAndThumbnail();
 haoHtmlKeepsOnlyWallpaperCards();
+haoSearchCategoryAndPaginationAreMapped();
 console.log("✓ birdCategoriesKeepTypeAndHotTags 通过");
 console.log("✓ birdWallpaperMapsPaginationTagsAndHttpsImage 通过");
 console.log("✓ birdCategoryRequestIncludesTypeAndPage 通过");
@@ -52,3 +63,4 @@ console.log("✓ birdTagSearchRequestIncludesKeywordAndPage 通过");
 console.log("✓ birdLatestRequestIncludesPage 通过");
 console.log("✓ timelinePayloadMapsOriginalAndThumbnail 通过");
 console.log("✓ haoHtmlKeepsOnlyWallpaperCards 通过");
+console.log("✓ haoSearchCategoryAndPaginationAreMapped 通过");

@@ -97,7 +97,8 @@ export function mapTimelineWallpapers(payload) {
 
 async function timelineGallery() {
   const deviceId = crypto.randomUUID().replaceAll("-", "");
-  const params = new URLSearchParams({ order: "date", seed: String(Date.now()), no: "", id: "", catehow: "", catewhat: "" });
+  // 拾光官网以 no 作为向前翻页游标，首次请求必须使用足够大的游标值。
+  const params = new URLSearchParams({ order: "date", seed: String(Date.now()), no: "99999999", id: "", catehow: "", catewhat: "" });
   const response = await fetch(`${TIMELINE_API}?${params}`, { headers: { "Timeline-Client": "timelineweb", "Timeline-Device": deviceId } });
   if (!response.ok) throw new Error("拾光壁纸源暂时无法访问，请稍后重试");
   const payload = await response.json();
@@ -120,13 +121,33 @@ export function parseHaoWallpaperHtml(html) {
   return items.slice(0, 24);
 }
 
-async function haoWallpaperGallery() {
-  const firstPage = 1 + Math.floor(Math.random() * 50);
-  const responses = await Promise.all(Array.from({ length: 4 }, (_, index) => fetch(`${HAO_WALLPAPER}/homeView?page=${firstPage + index}`)));
-  if (responses.some(response => !response.ok)) throw new Error("哲风壁纸源暂时无法访问，请稍后重试");
-  const items = parseHaoWallpaperHtml((await Promise.all(responses.map(response => response.text()))).join("\n"));
+export const HAO_CATEGORIES = ["全部", "自然风景", "动漫", "美女", "明星", "游戏", "汽车", "简约", "科幻", "城市"];
+
+export function buildHaoWallpaperUrl({ page = 1, keyword = "", category = "全部" } = {}) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  const search = keyword.trim() || (category !== "全部" ? category : "");
+  if (search) params.set("search", search);
+  const query = params.toString();
+  return `${HAO_WALLPAPER}/homeView${query ? `?${query}` : ""}`;
+}
+
+export function parseHaoWallpaperPage(html, page = 1) {
+  const items = parseHaoWallpaperHtml(html);
+  const pagerHtml = String(html).slice(Math.max(0, String(html).indexOf('class="page-content"')), String(html).indexOf('class="page-content"') + 5000);
+  const pages = [...pagerHtml.matchAll(/>(\d+)<\/a>/gi)].map(match => Number(match[1]));
+  const totalPage = Math.max(page, ...pages.filter(Number.isFinite));
+  return { items, page, totalPage, totalCount: totalPage * 12 };
+}
+
+export async function loadHaoWallpapers(options = {}) {
+  const page = Math.max(1, Number(options.page) || 1);
+  const response = await fetch(buildHaoWallpaperUrl({ ...options, page }));
+  if (!response.ok) throw new Error("哲风壁纸源暂时无法访问，请稍后重试");
+  const result = parseHaoWallpaperPage(await response.text(), page);
+  const items = result.items;
   if (!items.length) throw new Error("哲风壁纸页面暂未返回可用图片");
-  return items;
+  return result;
 }
 
 export const WALLPAPER_SOURCES = [
@@ -134,5 +155,5 @@ export const WALLPAPER_SOURCES = [
   { id: "bird", name: "小鸟最新", bird: true, load: () => loadBirdWallpapers() },
   { id: "bing-cn", name: "必应中国", load: bingChina },
   { id: "timeline", name: "拾光壁纸", load: timelineGallery },
-  { id: "hao-wallpaper", name: "哲风壁纸", load: haoWallpaperGallery }
+  { id: "hao-wallpaper", name: "哲风壁纸", hao: true, load: loadHaoWallpapers }
 ];
