@@ -1,35 +1,74 @@
-const API_360 = "https://wallpaper.apc.360.cn/index.php";
+const BIRD_API = "http://wp.birdpaper.com.cn/intf";
 const BING_CN = "https://cn.bing.com";
 const TIMELINE_API = "https://api.nguaduot.cn/snake/v4";
 const HAO_WALLPAPER = "https://haowallpaper.com";
 const secureUrl = (value = "") => String(value).replace(/^http:/i, "https:");
 
-export function map360Wallpapers(payload) {
-  const rows = Array.isArray(payload) ? payload : payload?.data || payload?.list || [];
-  return rows.map((item, index) => {
-    const url = secureUrl(item.url || item.img || item.url_mid || item.url_mobile || item.download_url);
-    const thumbnail = secureUrl(item.url_thumb || item.thumb || item.preview || item.url_mid || url);
+export function mapBirdCategories(payload) {
+  return (payload?.data || []).map(item => ({
+    id: String(item.old_id || ""),
+    name: item.show_name || item.category || "其他",
+    fullName: item.category || item.show_name || "其他",
+    tags: (item.hot_tag || []).map(tag => tag.show_tag || tag.tag).filter(Boolean)
+  })).filter(item => item.id);
+}
+
+export function mapBirdWallpapers(payload) {
+  const data = payload?.data || {};
+  const items = (data.list || []).map((item, index) => {
+    const url = secureUrl(item.url);
     if (!url) return null;
+    const tags = String(item.tag || "").split(",").filter(Boolean);
     return {
-      id: `360-${item.id || item.pid || index}`,
-      name: item.utag || item.tag || item.title || item.name || "360 壁纸",
-      thumbnail,
+      id: `bird-${item.id || index}`,
+      name: tags[0] || item.category || item.author || "小鸟壁纸",
+      thumbnail: url,
       url,
-      source: "360 壁纸"
+      source: item.category ? `小鸟 · ${item.category}` : "小鸟壁纸",
+      tags
     };
-  }).filter(Boolean).slice(0, 24);
+  }).filter(Boolean);
+  return {
+    items,
+    page: Number(data.pageno) || 1,
+    totalPage: Number(data.total_page) || 1,
+    totalCount: Number(data.total_count) || items.length
+  };
 }
 
-async function fetch360(params) {
-  const response = await fetch(`${API_360}?${new URLSearchParams(params)}`);
-  if (!response.ok) throw new Error("360 壁纸源暂时无法访问，请稍后重试");
-  const items = map360Wallpapers(await response.json());
-  if (!items.length) throw new Error("没有找到相关壁纸，换个关键词试试");
-  return items;
+async function requestBird(path, params = {}) {
+  const response = await fetch(`${BIRD_API}/${path}?${new URLSearchParams(params)}`);
+  if (!response.ok) throw new Error("小鸟壁纸接口暂时无法访问，请稍后重试");
+  const payload = await response.json();
+  if (payload?.errno !== 0) throw new Error(payload?.msg || "小鸟壁纸接口返回异常");
+  return payload;
 }
 
-export const searchWallpapers = (keyword) => fetch360({ c: "WallPaper", a: "search", kw: keyword.trim(), start: "0", count: "24" });
-const category360 = (cid) => fetch360({ c: "WallPaper", a: "getAppsByCategory", cid: String(cid), start: "0", count: "24", from: "360chrome" });
+export async function getBirdCategories() {
+  return mapBirdCategories(await requestBird("getCategory"));
+}
+
+export function buildBirdRequest({ mode = "latest", categoryId = "", keyword = "", page = 1, count = 24 } = {}) {
+  let path = "newestList";
+  let params = { pageno: String(page), count: String(count) };
+  if (mode === "category" && categoryId) {
+    path = "getListByCategory";
+    params = { cids: String(categoryId), ...params };
+  } else if (mode === "search" && keyword.trim()) {
+    path = "search";
+    params = { content: keyword.trim(), ...params };
+  }
+  return { path, params };
+}
+
+export async function loadBirdWallpapers(options = {}) {
+  const { path, params } = buildBirdRequest(options);
+  const result = mapBirdWallpapers(await requestBird(path, params));
+  if (!result.items.length) throw new Error("没有找到相关壁纸，换个分类或关键词试试");
+  return result;
+}
+
+export const searchWallpapers = (keyword, page = 1) => loadBirdWallpapers({ mode: "search", keyword, page });
 
 async function bingChina() {
   const response = await fetch(`${BING_CN}/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=zh-CN`);
@@ -92,13 +131,7 @@ async function haoWallpaperGallery() {
 
 export const WALLPAPER_SOURCES = [
   { id: "curated", name: "内置精选", local: true },
-  { id: "360-featured", name: "360 精选", load: () => category360(36) },
-  { id: "360-landscape", name: "自然风景", load: () => category360(9) },
-  { id: "360-anime", name: "动漫", load: () => category360(26) },
-  { id: "360-celebrity", name: "明星", load: () => category360(11) },
-  { id: "360-portrait", name: "人像", load: () => category360(6) },
-  { id: "360-pets", name: "萌宠", load: () => category360(14) },
-  { id: "360-fresh", name: "小清新", load: () => category360(15) },
+  { id: "bird", name: "小鸟最新", bird: true, load: () => loadBirdWallpapers() },
   { id: "bing-cn", name: "必应中国", load: bingChina },
   { id: "timeline", name: "拾光壁纸", load: timelineGallery },
   { id: "hao-wallpaper", name: "哲风壁纸", load: haoWallpaperGallery }
