@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { buildBirdRequest, buildHaoWallpaperUrl, mapBirdCategories, mapBirdWallpapers, mapTimelineWallpapers, parseHaoWallpaperHtml, parseHaoWallpaperPage } from "../src/wallpapers.js";
+import { buildBirdRequest, buildHaoWallpaperUrl, mapBirdCategories, mapBirdWallpapers, parseHaoWallpaperHtml, parseHaoWallpaperPage } from "../src/wallpapers.js";
 
 function birdCategoriesKeepTypeAndHotTags() {
   const categories = mapBirdCategories({ data: [{ old_id: "9", category: "风景大片", show_name: "风景", hot_tag: [{ tag: "城市夜景", show_tag: "城市夜景" }] }] });
@@ -26,11 +26,6 @@ function birdLatestRequestIncludesPage() {
   assert.deepEqual(buildBirdRequest({ mode: "latest", page: 2 }), { path: "newestList", params: { pageno: "2", count: "24" } });
 }
 
-function timelinePayloadMapsOriginalAndThumbnail() {
-  const items = mapTimelineWallpapers({ data: [{ id: "abc", title: "晨光", imgurl: "http://img.example/a.jpg", thumburl: "http://img.example/a.webp" }] });
-  assert.deepEqual(items[0], { id: "timeline-abc", name: "晨光", url: "https://img.example/a.jpg", thumbnail: "https://img.example/a.webp", source: "拾光壁纸" });
-}
-
 function haoHtmlKeepsOnlyWallpaperCards() {
   const html = '<img src="/favicon.ico"><img src="https://haowallpaper.com/link/common/file/getCroppingImg/123" alt="山川 &amp; 湖泊"><img src="/other.png">';
   const items = parseHaoWallpaperHtml(html);
@@ -53,7 +48,6 @@ birdWallpaperMapsPaginationTagsAndHttpsImage();
 birdCategoryRequestIncludesTypeAndPage();
 birdTagSearchRequestIncludesKeywordAndPage();
 birdLatestRequestIncludesPage();
-timelinePayloadMapsOriginalAndThumbnail();
 haoHtmlKeepsOnlyWallpaperCards();
 haoSearchCategoryAndPaginationAreMapped();
 console.log("✓ birdCategoriesKeepTypeAndHotTags 通过");
@@ -61,6 +55,5 @@ console.log("✓ birdWallpaperMapsPaginationTagsAndHttpsImage 通过");
 console.log("✓ birdCategoryRequestIncludesTypeAndPage 通过");
 console.log("✓ birdTagSearchRequestIncludesKeywordAndPage 通过");
 console.log("✓ birdLatestRequestIncludesPage 通过");
-console.log("✓ timelinePayloadMapsOriginalAndThumbnail 通过");
 console.log("✓ haoHtmlKeepsOnlyWallpaperCards 通过");
 console.log("✓ haoSearchCategoryAndPaginationAreMapped 通过");

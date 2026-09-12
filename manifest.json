@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "MyWebTab 新标签页",
   "short_name": "MyWebTab",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "description": "简洁、美观、可定制的 Edge 与 Chrome 新标签页。",
   "chrome_url_overrides": {
     "newtab": "newtab.html"
@@ -15,8 +15,6 @@
     "https://api.qrserver.com/*",
     "http://wp.birdpaper.com.cn/*",
     "https://cn.bing.com/*",
-    "https://api.nguaduot.cn/*",
-    "https://gallery.timeline.ink/*",
     "https://haowallpaper.com/*"
   ],
   "optional_host_permissions": ["http://*/*", "https://*/*"],
