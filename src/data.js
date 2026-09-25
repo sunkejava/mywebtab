@@ -92,4 +92,6 @@ export const WALLPAPERS = [
   ["minimal", "极简空间", "极简", "photo-1494438639946-1ebd1d20bf85"], ["paper", "柔和纸张", "极简", "photo-1497366811353-6870744d04b2"]
 ].map(([id,name,category,photo])=>({id,name,category,thumbnail:`https://images.unsplash.com/${photo}?auto=format&fit=crop&w=500&q=72`,url:`https://images.unsplash.com/${photo}?auto=format&fit=crop&w=2400&q=88`}));
 
-export const DEFAULT_SETTINGS = { schemaVersion: 5, engine: "bing", category: "common", theme: "aurora", colorMode: "dark", openMode: "new", wallpaper: "", customBackground: "", blur: 18, shortcutBlur: 12, shade: 36, links: DEFAULT_LINKS, weather: null };
+import { DEFAULT_WATCHLIST } from "./market.js";
+
+export const DEFAULT_SETTINGS = { schemaVersion: 6, engine: "bing", category: "common", theme: "aurora", colorMode: "dark", openMode: "new", wallpaper: "", customBackground: "", blur: 18, shortcutBlur: 12, shade: 36, links: DEFAULT_LINKS, watchlist: DEFAULT_WATCHLIST, weather: null };

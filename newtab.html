@@ -70,6 +70,15 @@
           <blockquote id="quoteText">正在寻找今天的灵感…</blockquote>
           <span id="quoteAuthor">MyWebTab</span>
         </article>
+
+        <article class="widget market-widget">
+          <div class="market-heading">
+            <div><div class="eyebrow">简易盯盘</div><strong>股票与基金涨跌</strong><small id="marketUpdated">正在加载行情…</small></div>
+            <div class="market-actions"><button id="refreshMarket" type="button" title="刷新行情">↻</button><button id="manageMarket" type="button">配置</button></div>
+          </div>
+          <div class="market-list" id="marketList"><span class="market-empty">正在读取自选配置…</span></div>
+          <p class="market-disclaimer">行情仅供参考，不构成投资建议；基金显示最近可用净值涨跌。</p>
+        </article>
       </section>
 
       <footer><span>按 <kbd>/</kbd> 快速搜索</span><span id="footerTip">数据仅保存在当前浏览器</span></footer>
@@ -86,6 +95,7 @@
     <div class="toast hidden" id="toast" role="status"></div>
     <input class="hidden" id="backgroundPicker" type="file" accept="image/*" />
     <input class="hidden" id="importPicker" type="file" accept="application/json" />
+    <input class="hidden" id="bookmarkPicker" type="file" accept="text/html,.html,.htm" />
     <script type="module" src="src/app.js"></script>
   </body>
 </html>

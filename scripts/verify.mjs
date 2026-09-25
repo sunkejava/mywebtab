@@ -5,7 +5,7 @@ const manifest = JSON.parse(await readFile("manifest.json", "utf8"));
 if (manifest.manifest_version !== 3) throw new Error("必须使用 Manifest V3");
 if (!manifest.chrome_url_overrides?.newtab) throw new Error("缺少新标签页入口");
 
-const required = [manifest.chrome_url_overrides.newtab, ...Object.values(manifest.icons), "tools.html", "src/app.js", "src/data.js", "src/storage.js", "src/weather.js", "src/wallpapers.js", "src/commands.js", "src/tools.js", "src/styles.css", "src/styles-extra.css", "src/tools.css", "src/tools-extra.css", "src/tools-v22.css"];
+const required = [manifest.chrome_url_overrides.newtab, ...Object.values(manifest.icons), "tools.html", "src/app.js", "src/data.js", "src/storage.js", "src/weather.js", "src/wallpapers.js", "src/market.js", "src/bookmarks.js", "src/commands.js", "src/tools.js", "src/styles.css", "src/styles-extra.css", "src/tools.css", "src/tools-extra.css", "src/tools-v22.css"];
 await Promise.all(required.map((path) => access(path)));
 for (const file of required.filter((path) => path.endsWith(".js"))) execFileSync(process.execPath, ["--check", file], { stdio: "inherit" });
 
@@ -24,11 +24,14 @@ if (!WALLPAPER_SOURCES.some(source => source.id === "bird" && source.bird) || WA
 if (!WALLPAPER_SOURCES.some(item => item.id === "hao-wallpaper" && typeof item.load === "function") || WALLPAPER_SOURCES.some(item => item.id === "timeline")) throw new Error("哲风壁纸或拾光移除状态不正确");
 if (!getHaoDisplayUrl("/link/common/file/getCroppingImg/123").includes("/previewFileImg/123")) throw new Error("哲风壁纸背景仍在使用列表缩略图");
 for (const host of ["http://wp.birdpaper.com.cn/*", "https://haowallpaper.com/*"]) if (!manifest.host_permissions.includes(host)) throw new Error(`${host} 权限缺失`);
+if (!manifest.host_permissions.includes("https://qt.gtimg.cn/*")) throw new Error("腾讯行情接口权限缺失");
 if (manifest.host_permissions.some(host => /timeline|nguaduot/i.test(host))) throw new Error("仍包含拾光壁纸接口权限");
 const appSource = await readFile("src/app.js", "utf8");
 const stylesSource = await readFile("src/styles.css", "utf8");
 if (!Number.isFinite(DEFAULT_SETTINGS.shortcutBlur) || !appSource.includes("shortcutBlurRange") || !stylesSource.includes("--shortcut-blur")) throw new Error("快捷方式背景模糊度设置未完整接入");
 if (!stylesSource.includes("background-size:cover") || !stylesSource.includes("transform:none")) throw new Error("壁纸未按无额外缩放的全屏模式显示");
+const { DEFAULT_WATCHLIST } = await import("../src/market.js");
+if (DEFAULT_WATCHLIST.length !== 8 || !appSource.includes("bookmarkPicker") || !appSource.includes("data-edit") || !html.includes("marketList")) throw new Error("盯盘或快捷方式编辑、收藏夹导入功能未完整接入");
 for (const category of ["shopping", "blog", "dev", "ai"]) if (DEFAULT_LINKS.filter(link => link.category === category).length < 10) throw new Error(`${category} 默认网站不足`);
 const { COMMAND_CATALOG } = await import("../src/commands.js");
 for (const shell of ["linux", "powershell", "cmd"]) if (COMMAND_CATALOG.filter(item => item[0] === shell).length < 25) throw new Error(`${shell} 命令数量不足`);

@@ -1,11 +1,11 @@
 {
   "name": "mywebtab",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "icons": "node scripts/icons.mjs",
-    "check": "node scripts/test-wallpapers.mjs && node scripts/test-tools.mjs && node scripts/verify.mjs",
+    "check": "node scripts/test-wallpapers.mjs && node scripts/test-tools.mjs && node scripts/test-dashboard.mjs && node scripts/verify.mjs",
     "package": "node scripts/package.mjs"
   }
 }
