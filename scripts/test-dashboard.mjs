@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { DEFAULT_WATCHLIST, fetchWatchlist, normalizeMarketItem, parseTencentQuote, toTencentSymbol } from "../src/market.js";
-import { inferBookmarkCategory, mergeBookmarkLinks, parseBookmarksHtml } from "../src/bookmarks.js";
+import { extractBookmarkCategories, inferBookmarkCategory, mergeBookmarkLinks, parseBookmarksHtml } from "../src/bookmarks.js";
+import { pruneUnusedCategories, removeLinksByIds } from "../src/links.js";
 
 function defaultWatchlistContainsRequestedEightFunds() {
   assert.deepEqual(DEFAULT_WATCHLIST.map(item => item.code), ["023638", "006328", "010942", "166002", "003949", "017175", "004997", "005693"]);
@@ -26,10 +27,13 @@ function fundAndStockQuotesParseIntoUnifiedShape() {
 }
 
 function edgeBookmarksImportNestedFoldersAndRejectUnsafeUrls() {
-  const html = `<!DOCTYPE NETSCAPE-Bookmark-file-1><DL><DT><H3>开发收藏</H3><DL><DT><A HREF="https://github.com/a?x=1&amp;y=2">GitHub &amp; Docs</A><DT><A HREF="javascript:alert(1)">危险链接</A></DL><DT><H3>购物</H3><DL><DT><A HREF="https://www.jd.com/">京东</A></DL></DL>`;
+  const html = `<!DOCTYPE NETSCAPE-Bookmark-file-1><DL><DT><H3>收藏夹栏</H3><DL><DT><H3>开发收藏</H3><DL><DT><A HREF="https://github.com/a?x=1&amp;y=2">GitHub &amp; Docs</A><DT><A HREF="javascript:alert(1)">危险链接</A></DL></DL><DT><H3>其他收藏夹</H3><DL><DT><H3>开发收藏</H3><DL><DT><A HREF="https://www.jd.com/">京东</A></DL></DL></DL>`;
   const links = parseBookmarksHtml(html);
   assert.equal(links.length, 2);
-  assert.deepEqual(links.map(item => [item.name, item.category]), [["GitHub & Docs", "dev"], ["京东", "shopping"]]);
+  assert.deepEqual(links.map(item => item.categoryMeta.name), ["收藏夹栏 / 开发收藏", "其他收藏夹 / 开发收藏"]);
+  assert.notEqual(links[0].category, links[1].category);
+  assert.equal(parseBookmarksHtml(html)[0].category, links[0].category);
+  assert.deepEqual(extractBookmarkCategories(links).map(item => item.name), ["收藏夹栏 / 开发收藏", "其他收藏夹 / 开发收藏"]);
   assert.equal(links[0].url, "https://github.com/a?x=1&y=2");
   assert.equal(inferBookmarkCategory("博客", "文章", "https://example.com"), "blog");
 }
@@ -41,6 +45,14 @@ function bookmarkMergeKeepsExistingAndDeduplicatesUrls() {
   assert.equal(result.links.length, 2);
   assert.deepEqual(result.added.map(item => item.id), ["3"]);
   assert.equal(result.links[0], existing[0]);
+}
+
+function batchDeleteRemovesAllSelectedLinksAndPrunesEmptyCategories() {
+  const links=[{id:"a",category:"folder-a"},{id:"b",category:"folder-a"},{id:"c",category:"common"}],categories=[{id:"folder-a",name:"目录 A"}];
+  const remaining=removeLinksByIds(links,new Set(["a","b"]));
+  assert.deepEqual(remaining.map(item=>item.id),["c"]);
+  assert.deepEqual(pruneUnusedCategories(categories,remaining),[]);
+  assert.equal(removeLinksByIds(remaining,new Set()),remaining);
 }
 
 async function watchlistRefreshIsolatesIndividualQuoteFailures() {
@@ -59,10 +71,12 @@ marketCodesMapToTencentSymbols();
 fundAndStockQuotesParseIntoUnifiedShape();
 edgeBookmarksImportNestedFoldersAndRejectUnsafeUrls();
 bookmarkMergeKeepsExistingAndDeduplicatesUrls();
+batchDeleteRemovesAllSelectedLinksAndPrunesEmptyCategories();
 await watchlistRefreshIsolatesIndividualQuoteFailures();
 console.log("✓ defaultWatchlistContainsRequestedEightFunds 通过");
 console.log("✓ marketCodesMapToTencentSymbols 通过");
 console.log("✓ fundAndStockQuotesParseIntoUnifiedShape 通过");
 console.log("✓ edgeBookmarksImportNestedFoldersAndRejectUnsafeUrls 通过");
 console.log("✓ bookmarkMergeKeepsExistingAndDeduplicatesUrls 通过");
+console.log("✓ batchDeleteRemovesAllSelectedLinksAndPrunesEmptyCategories 通过");
 console.log("✓ watchlistRefreshIsolatesIndividualQuoteFailures 通过");

@@ -5,7 +5,7 @@ const manifest = JSON.parse(await readFile("manifest.json", "utf8"));
 if (manifest.manifest_version !== 3) throw new Error("必须使用 Manifest V3");
 if (!manifest.chrome_url_overrides?.newtab) throw new Error("缺少新标签页入口");
 
-const required = [manifest.chrome_url_overrides.newtab, ...Object.values(manifest.icons), "tools.html", "src/app.js", "src/data.js", "src/storage.js", "src/weather.js", "src/wallpapers.js", "src/market.js", "src/bookmarks.js", "src/commands.js", "src/tools.js", "src/styles.css", "src/styles-extra.css", "src/tools.css", "src/tools-extra.css", "src/tools-v22.css"];
+const required = [manifest.chrome_url_overrides.newtab, ...Object.values(manifest.icons), "tools.html", "src/app.js", "src/data.js", "src/storage.js", "src/weather.js", "src/wallpapers.js", "src/market.js", "src/bookmarks.js", "src/links.js", "src/commands.js", "src/tools.js", "src/styles.css", "src/styles-extra.css", "src/tools.css", "src/tools-extra.css", "src/tools-v22.css"];
 await Promise.all(required.map((path) => access(path)));
 for (const file of required.filter((path) => path.endsWith(".js"))) execFileSync(process.execPath, ["--check", file], { stdio: "inherit" });
 
@@ -31,7 +31,7 @@ const stylesSource = await readFile("src/styles.css", "utf8");
 if (!Number.isFinite(DEFAULT_SETTINGS.shortcutBlur) || !appSource.includes("shortcutBlurRange") || !stylesSource.includes("--shortcut-blur")) throw new Error("快捷方式背景模糊度设置未完整接入");
 if (!stylesSource.includes("background-size:cover") || !stylesSource.includes("transform:none")) throw new Error("壁纸未按无额外缩放的全屏模式显示");
 const { DEFAULT_WATCHLIST } = await import("../src/market.js");
-if (DEFAULT_WATCHLIST.length !== 8 || !appSource.includes("bookmarkPicker") || !appSource.includes("importBookmarksSettings") || !appSource.includes("data-edit") || !html.includes("marketList")) throw new Error("盯盘或快捷方式编辑、设置页收藏夹导入功能未完整接入");
+if (DEFAULT_WATCHLIST.length !== 8 || !appSource.includes("bookmarkPicker") || !appSource.includes("extractBookmarkCategories") || !appSource.includes("batchDeleteLinks") || !appSource.includes("selectAllLinks") || !appSource.includes("data-edit") || !html.includes("marketList")) throw new Error("盯盘、目录分类或快捷方式批量管理功能未完整接入");
 for (const category of ["shopping", "blog", "dev", "ai"]) if (DEFAULT_LINKS.filter(link => link.category === category).length < 10) throw new Error(`${category} 默认网站不足`);
 const { COMMAND_CATALOG } = await import("../src/commands.js");
 for (const shell of ["linux", "powershell", "cmd"]) if (COMMAND_CATALOG.filter(item => item[0] === shell).length < 25) throw new Error(`${shell} 命令数量不足`);

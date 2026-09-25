@@ -3,12 +3,14 @@ import { loadSettings, saveSettings } from "./storage.js";
 import { fetchWeather } from "./weather.js";
 import { HAO_CATEGORIES, WALLPAPER_SOURCES, getBirdCategories, loadBirdWallpapers, loadHaoWallpapers, searchWallpapers } from "./wallpapers.js";
 import { fetchWatchlist, normalizeMarketItem } from "./market.js";
-import { mergeBookmarkLinks, parseBookmarksHtml } from "./bookmarks.js";
+import { extractBookmarkCategories, mergeBookmarkLinks, parseBookmarksHtml } from "./bookmarks.js";
+import { pruneUnusedCategories, removeLinksByIds } from "./links.js";
 
 const $ = (selector) => document.querySelector(selector);
 const state = { settings: await loadSettings(), timer: null, showSeconds: false };
 let settingsActiveTab = "appearance";
 const quotes = [["保持好奇，持续创造。","MyWebTab"],["种一棵树最好的时间是十年前，其次是现在。","谚语"],["简单是可靠的先决条件。","Edsger Dijkstra"],["先完成，再完美。","行动准则"],["不积跬步，无以至千里。","荀子"],["知不足者好学，耻下问者自满。","林逋"],["日日行，不怕千万里；常常做，不怕千万事。","格言"],["纸上得来终觉浅，绝知此事要躬行。","陆游"],["凡事预则立，不预则废。","礼记"],["路虽远，行则将至；事虽难，做则必成。","荀子"]];
+const getCategories = () => [...CATEGORIES, ...(state.settings.customCategories || [])];
 
 function normalizeUrl(value) {
   const trimmed = value.trim();
@@ -44,7 +46,7 @@ function renderEngine() {
 }
 
 function renderLinks() {
-  $("#categoryTabs").innerHTML = CATEGORIES.map((category) => `<button class="tab ${category.id === state.settings.category ? "active" : ""}" data-category="${category.id}">${category.name}</button>`).join("");
+  $("#categoryTabs").innerHTML = getCategories().map((category) => `<button class="tab ${category.id === state.settings.category ? "active" : ""}" data-category="${category.id}" title="${escapeHtml(category.path||category.name)}">${escapeHtml(category.name)}</button>`).join("");
   const links = state.settings.links.filter((link) => link.category === state.settings.category && isSafeWebUrl(link.url));
   const target=state.settings.openMode==="new"?"_blank":"_self";
   $("#shortcutGrid").innerHTML = links.map((link) => {const favicon=`${new URL(link.url).origin}/favicon.ico`;return `<a class="shortcut" href="${link.url}" target="${target}" rel="noopener" title="${escapeHtml(link.name)}"><span class="shortcut-icon" style="--shortcut-color:${link.color}"><img src="${favicon}" alt="" data-fallback><b>${escapeHtml(link.icon || link.name.slice(0,2))}</b></span><span class="shortcut-name">${escapeHtml(link.name)}</span></a>`;}).join("") + `<button class="shortcut add-shortcut" id="addShortcut"><span class="shortcut-icon">+</span><span class="shortcut-name">添加网站</span></button>`;
@@ -66,7 +68,7 @@ function closeModal(){ $("#modalLayer").classList.add("hidden"); }
 function openModal(title, eyebrow, content){ $(".modal").classList.remove("settings-modal"); $("#modalTitle").textContent=title; $("#modalEyebrow").textContent=eyebrow; $("#modalBody").innerHTML=content; $("#modalLayer").classList.remove("hidden"); }
 
 function openLinkEditor(existing = null) {
-  const options=CATEGORIES.map(c=>`<option value="${c.id}" ${c.id===state.settings.category?"selected":""}>${c.name}</option>`).join("");
+  const options=getCategories().map(c=>`<option value="${c.id}" ${c.id===state.settings.category?"selected":""}>${escapeHtml(c.name)}</option>`).join("");
   const selectedOptions=existing?options.replace(`value="${state.settings.category}" selected`, `value="${state.settings.category}"`).replace(`value="${existing.category}"`, `value="${existing.category}" selected`):options;
   openModal(existing?"编辑网站":"添加网站", "快捷方式", `<form id="linkForm"><div class="field-row"><div class="field"><label>网站名称</label><input name="name" required maxlength="40" placeholder="例如：我的博客" value="${escapeHtml(existing?.name||"")}"></div><div class="field"><label>所属板块</label><select name="category">${selectedOptions}</select></div></div><div class="field"><label>网站地址</label><input name="url" required placeholder="https://example.com" value="${escapeHtml(existing?.url||"")}"></div><div class="field-row"><div class="field"><label>图标文字（1-4 字符）</label><input name="icon" maxlength="4" placeholder="自动取名称" value="${escapeHtml(existing?.icon||"")}"></div><div class="field"><label>图标颜色</label><input name="color" type="color" value="${existing?.color||"#4f7cff"}"></div></div><button class="primary-button" type="submit">${existing?"保存修改":"保存快捷方式"}</button></form>`);
   $("#linkForm").addEventListener("submit", async (event)=>{event.preventDefault();const data=new FormData(event.currentTarget);const url=normalizeUrl(data.get("url"));if(!url){toast("请输入有效的网站地址");return;}const name=data.get("name").trim();const link={id:existing?.id||crypto.randomUUID(),name,url,category:data.get("category"),icon:data.get("icon").trim()||name.slice(0,2),color:data.get("color")};if(existing)state.settings.links=state.settings.links.map(item=>item.id===existing.id?link:item);else state.settings.links.push(link);state.settings.category=link.category;await persist();renderLinks();closeModal();toast(existing?"快捷方式已修改":"快捷方式已添加");});
@@ -75,10 +77,18 @@ function openLinkEditor(existing = null) {
 const openAddLink = () => openLinkEditor();
 
 function openManageLinks(){
-  const links=state.settings.links.filter(l=>l.category===state.settings.category); const category=CATEGORIES.find(c=>c.id===state.settings.category);
-  openModal(`${category.name}板块`,"管理快捷方式",`<div class="button-row"><button class="primary-button" id="modalAddLink">+ 添加网站</button><button class="secondary-button" id="importBookmarks">导入 Edge 收藏夹</button><button class="secondary-button" id="restoreLinks">恢复默认快捷方式</button></div><div class="link-list">${links.map(l=>`<div class="link-row"><span class="shortcut-icon" style="--shortcut-color:${l.color}">${escapeHtml(l.icon)}</span><div><strong>${escapeHtml(l.name)}</strong><small>${escapeHtml(l.url)}</small></div><div class="link-actions"><button data-edit="${l.id}" title="编辑">编辑</button><button class="remove-link" data-remove="${l.id}" title="删除">删除</button></div></div>`).join("")||"<p>这个板块还没有快捷方式。</p>"}</div>`);
-  $("#modalAddLink").onclick=openAddLink; $("#importBookmarks").onclick=()=>$("#bookmarkPicker").click(); $("#restoreLinks").onclick=async()=>{state.settings.links=structuredClone(DEFAULT_LINKS);await persist();renderLinks();openManageLinks();toast("已恢复默认快捷方式");};
-  $("#modalBody").addEventListener("click",async e=>{const editId=e.target.dataset.edit;if(editId){openLinkEditor(state.settings.links.find(l=>l.id===editId));return}const id=e.target.dataset.remove;if(!id)return;state.settings.links=state.settings.links.filter(l=>l.id!==id);await persist();renderLinks();openManageLinks();toast("已删除");});
+  const category=getCategories().find(c=>c.id===state.settings.category)||CATEGORIES[0];
+  openModal(`${category.name}板块`,"管理快捷方式",`<div class="link-manage-toolbar"><div class="button-row"><button class="primary-button" id="modalAddLink">+ 添加网站</button><button class="secondary-button" id="importBookmarks">导入 Edge 收藏夹</button><button class="secondary-button" id="restoreLinks">恢复默认快捷方式</button></div><div class="batch-actions"><label><input type="checkbox" id="selectAllLinks"> 全选</label><span id="selectedLinkCount">已选 0 项</span><button class="danger-button" id="batchDeleteLinks" disabled>删除选中</button></div></div><div class="link-list" id="manageLinkList"></div>`);
+  const renderRows=()=>{const container=$("#manageLinkList");if(!container)return;const links=state.settings.links.filter(l=>l.category===state.settings.category);container.innerHTML=links.map(l=>`<div class="link-row" data-link-row="${l.id}"><label class="link-check" title="选择"><input type="checkbox" data-link-select="${l.id}"><span></span></label><span class="shortcut-icon" style="--shortcut-color:${l.color}">${escapeHtml(l.icon)}</span><div><strong>${escapeHtml(l.name)}</strong><small>${escapeHtml(l.url)}</small></div><div class="link-actions"><button data-edit="${l.id}" title="编辑">编辑</button><button class="remove-link" data-remove="${l.id}" title="删除">删除</button></div></div>`).join("")||'<p class="empty-links">这个板块还没有快捷方式。</p>';updateSelection();};
+  const selectedIds=()=>new Set([...document.querySelectorAll("[data-link-select]:checked")].map(input=>input.dataset.linkSelect));
+  const updateSelection=()=>{const counter=$("#selectedLinkCount"),deleteButton=$("#batchDeleteLinks"),selectAll=$("#selectAllLinks");if(!counter||!deleteButton||!selectAll)return;const boxes=[...document.querySelectorAll("[data-link-select]")],selected=boxes.filter(input=>input.checked);counter.textContent=`已选 ${selected.length} 项`;deleteButton.disabled=!selected.length;selectAll.checked=boxes.length>0&&selected.length===boxes.length;selectAll.indeterminate=selected.length>0&&selected.length<boxes.length;};
+  let deleting=false;const deleteLinks=async ids=>{if(!ids.size||deleting)return;deleting=true;try{state.settings.links=removeLinksByIds(state.settings.links,ids);state.settings.customCategories=pruneUnusedCategories(state.settings.customCategories,state.settings.links);await persist();renderLinks();if(!getCategories().some(c=>c.id===state.settings.category)){state.settings.category="common";await persist();closeModal();renderLinks();toast(`已删除 ${ids.size} 个快捷方式`);return}renderRows();toast(`已删除 ${ids.size} 个快捷方式`);}finally{deleting=false}};
+  $("#modalAddLink").onclick=openAddLink; $("#importBookmarks").onclick=()=>$("#bookmarkPicker").click(); $("#restoreLinks").onclick=async()=>{state.settings.links=structuredClone(DEFAULT_LINKS);state.settings.customCategories=[];state.settings.category="common";await persist();renderLinks();closeModal();toast("已恢复默认快捷方式");};
+  $("#selectAllLinks").onchange=e=>{document.querySelectorAll("[data-link-select]").forEach(input=>input.checked=e.target.checked);updateSelection();};
+  $("#batchDeleteLinks").onclick=()=>deleteLinks(selectedIds());
+  $("#modalBody").addEventListener("change",e=>{if(e.target.matches("[data-link-select]"))updateSelection();});
+  $("#modalBody").addEventListener("click",e=>{const editId=e.target.dataset.edit;if(editId){openLinkEditor(state.settings.links.find(l=>l.id===editId));return}const id=e.target.dataset.remove;if(id)deleteLinks(new Set([id]));});
+  renderRows();
 }
 
 function renderMarket(results = null) {
@@ -152,7 +162,7 @@ $("#weatherButton").onclick=async()=>{try{$("#weatherText").textContent="正在�
 $("#refreshMarket").onclick=refreshMarket; $("#manageMarket").onclick=openManageMarket;
 $("#backgroundPicker").onchange=event=>{const file=event.target.files[0];if(!file)return;if(file.size>8*1024*1024){toast("图片过大，请选择 8MB 以内图片");return;}const reader=new FileReader();reader.onload=async()=>{state.settings.customBackground=reader.result;try{await persist();applyAppearance();openSettings();toast("背景已更新");}catch{state.settings.customBackground="";toast("背景保存失败，请压缩图片后重试");}};reader.readAsDataURL(file);};
 $("#importPicker").onchange=event=>{const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async()=>{try{const imported=JSON.parse(reader.result);if(!Array.isArray(imported.links))throw new Error();imported.links=imported.links.filter(link=>isSafeWebUrl(link.url));state.settings={...DEFAULT_SETTINGS,...imported};await persist();location.reload();}catch{toast("配置文件格式无效");}};reader.readAsText(file);};
-$("#bookmarkPicker").onchange=event=>{const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async()=>{try{const imported=parseBookmarksHtml(reader.result);if(!imported.length)throw new Error("文件中没有可导入的网址");const merged=mergeBookmarkLinks(state.settings.links,imported);state.settings.links=merged.links;await persist();renderLinks();openManageLinks();toast(`成功导入 ${merged.added.length} 个快捷方式`);}catch(error){toast(error.message||"收藏夹文件格式无效");}finally{event.target.value="";}};reader.readAsText(file);};
+$("#bookmarkPicker").onchange=event=>{const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async()=>{try{const imported=parseBookmarksHtml(reader.result);if(!imported.length)throw new Error("文件中没有可导入的网址");const merged=mergeBookmarkLinks(state.settings.links,imported),categories=extractBookmarkCategories(merged.added),categoryMap=new Map((state.settings.customCategories||[]).map(item=>[item.id,item]));categories.forEach(item=>categoryMap.set(item.id,item));state.settings.links=merged.links;state.settings.customCategories=[...categoryMap.values()];if(merged.added[0])state.settings.category=merged.added[0].category;await persist();renderLinks();openManageLinks();toast(`成功导入 ${merged.added.length} 个快捷方式，创建 ${categories.length} 个目录分类`);}catch(error){toast(error.message||"收藏夹文件格式无效");}finally{event.target.value="";}};reader.readAsText(file);};
 document.addEventListener("keydown",event=>{if(event.key==="/"&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)){event.preventDefault();$("#searchInput").focus();}if(event.key==="Escape"){closeModal();$("#engineMenu").classList.add("hidden");}});
 document.addEventListener("click",event=>{if(!event.target.closest(".search"))$("#engineMenu").classList.add("hidden");});
 

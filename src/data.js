@@ -94,4 +94,4 @@ export const WALLPAPERS = [
 
 import { DEFAULT_WATCHLIST } from "./market.js";
 
-export const DEFAULT_SETTINGS = { schemaVersion: 6, engine: "bing", category: "common", theme: "aurora", colorMode: "dark", openMode: "new", wallpaper: "", customBackground: "", blur: 18, shortcutBlur: 12, shade: 36, links: DEFAULT_LINKS, watchlist: DEFAULT_WATCHLIST, weather: null };
+export const DEFAULT_SETTINGS = { schemaVersion: 7, engine: "bing", category: "common", theme: "aurora", colorMode: "dark", openMode: "new", wallpaper: "", customBackground: "", blur: 18, shortcutBlur: 12, shade: 36, links: DEFAULT_LINKS, customCategories: [], watchlist: DEFAULT_WATCHLIST, weather: null };

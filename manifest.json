@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "MyWebTab 新标签页",
   "short_name": "MyWebTab",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "简洁、美观、可定制的 Edge 与 Chrome 新标签页。",
   "chrome_url_overrides": {
     "newtab": "newtab.html"

@@ -15,6 +15,18 @@ export function inferBookmarkCategory(folder, name, url) {
   return CATEGORY_RULES.find(([, pattern]) => pattern.test(source))?.[0] || "common";
 }
 
+function folderCategory(path) {
+  let hash = 2166136261;
+  for (const char of path) { hash ^= char.codePointAt(0); hash = Math.imul(hash, 16777619); }
+  return { id: `folder-${(hash >>> 0).toString(36)}`, name: path, path };
+}
+
+export function extractBookmarkCategories(links) {
+  const categories = new Map();
+  for (const link of links) if (link.categoryMeta) categories.set(link.categoryMeta.id, link.categoryMeta);
+  return [...categories.values()];
+}
+
 export function parseBookmarksHtml(html) {
   const tokens = String(html).match(/<H3\b[^>]*>[\s\S]*?<\/H3>|<A\b[^>]*>[\s\S]*?<\/A>|<DL\b[^>]*>|<\/DL>/gi) || [];
   const folders = [];
@@ -29,8 +41,9 @@ export function parseBookmarksHtml(html) {
     try { parsed = new URL(href); } catch { continue; }
     if (!["http:", "https:"].includes(parsed.protocol)) continue;
     const name = decodeHtml(token.replace(/^<A\b[^>]*>|<\/A>$/gi, "").replace(/<[^>]+>/g, "")).trim() || parsed.hostname;
-    const folder = folders.at(-1) || "";
-    links.push({ id: `bookmark-${links.length}-${Date.now()}`, name: name.slice(0, 40), url: parsed.href, category: inferBookmarkCategory(folder, name, parsed.href), icon: name.slice(0, 2), color: "#4f7cff" });
+    const folderPath = folders.join(" / ");
+    const categoryMeta = folderPath ? folderCategory(folderPath) : null;
+    links.push({ id: `bookmark-${links.length}-${Date.now()}`, name: name.slice(0, 40), url: parsed.href, category: categoryMeta?.id || inferBookmarkCategory("", name, parsed.href), categoryMeta, icon: name.slice(0, 2), color: "#4f7cff" });
   }
   return links;
 }

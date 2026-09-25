@@ -22,7 +22,8 @@ function migrate(saved) {
     const existing = new Set(links.map(link => `${link.category}|${link.url}`));
     links = [...links, ...DEFAULT_SETTINGS.links.filter(link => !existing.has(`${link.category}|${link.url}`))];
   }
-  return { ...DEFAULT_SETTINGS, ...saved, schemaVersion: DEFAULT_SETTINGS.schemaVersion, links };
+  const customCategories = Array.isArray(saved.customCategories) ? saved.customCategories : [];
+  return { ...DEFAULT_SETTINGS, ...saved, schemaVersion: DEFAULT_SETTINGS.schemaVersion, links, customCategories };
 }
 
 export async function saveSettings(settings) {
