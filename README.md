@@ -63,7 +63,7 @@ npm run check
 npm run package
 ```
 
-打包产物位于 `dist/mywebtab-v3.0.0.zip`。开发后在扩展管理页点击“重新加载”即可查看修改。
+打包产物位于 `dist/mywebtab-v3.0.1.zip`。开发后在扩展管理页点击“重新加载”即可查看修改。
 
 ## 目录
 

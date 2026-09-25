@@ -31,7 +31,7 @@ const stylesSource = await readFile("src/styles.css", "utf8");
 if (!Number.isFinite(DEFAULT_SETTINGS.shortcutBlur) || !appSource.includes("shortcutBlurRange") || !stylesSource.includes("--shortcut-blur")) throw new Error("快捷方式背景模糊度设置未完整接入");
 if (!stylesSource.includes("background-size:cover") || !stylesSource.includes("transform:none")) throw new Error("壁纸未按无额外缩放的全屏模式显示");
 const { DEFAULT_WATCHLIST } = await import("../src/market.js");
-if (DEFAULT_WATCHLIST.length !== 8 || !appSource.includes("bookmarkPicker") || !appSource.includes("data-edit") || !html.includes("marketList")) throw new Error("盯盘或快捷方式编辑、收藏夹导入功能未完整接入");
+if (DEFAULT_WATCHLIST.length !== 8 || !appSource.includes("bookmarkPicker") || !appSource.includes("importBookmarksSettings") || !appSource.includes("data-edit") || !html.includes("marketList")) throw new Error("盯盘或快捷方式编辑、设置页收藏夹导入功能未完整接入");
 for (const category of ["shopping", "blog", "dev", "ai"]) if (DEFAULT_LINKS.filter(link => link.category === category).length < 10) throw new Error(`${category} 默认网站不足`);
 const { COMMAND_CATALOG } = await import("../src/commands.js");
 for (const shell of ["linux", "powershell", "cmd"]) if (COMMAND_CATALOG.filter(item => item[0] === shell).length < 25) throw new Error(`${shell} 命令数量不足`);
